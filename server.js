@@ -7,7 +7,8 @@ const app = express();
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-
+const dotenv=require("dotenv");
+dotenv.config();
 const cookieParser = require("cookie-parser");
 
 // Custom Authentication & Authorization Middlewares
@@ -102,7 +103,7 @@ app.post("/login", async (req, res) => {
         });
     }
 
-    // 2. Verify hashed password
+    // 2. Verify hashed password                current     db_hashed_password
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
@@ -117,7 +118,8 @@ app.post("/login", async (req, res) => {
             userId: user._id,
             role: user.role
         },
-        "saif0@123", // JWT secret key
+        "saif0@123", // JWT secret key  //process.env.JWT_SECRET
+        // process.env.JWT_SECRET,
         {
             expiresIn: "1d" // Token valid for 1 day
         }
@@ -140,10 +142,12 @@ app.post("/login", async (req, res) => {
 // --- GENERAL PROTECTED ROUTE ---
 // Accessible by any user who provides a valid JWT token
 app.get("/protected", auth, (req, res) => {
-    res.json({
-        message: "You are authorized to access this route",
-        user: req.user // Decoded payload from JWT (userId, role)
-    });
+    // res.json({
+    //     message: "You are authorized to access this route",
+    //     user: req.user // Decoded payload from JWT (userId, role)
+    // });
+    res.render("dashboard");
+
 });
 
 // --- FACULTY-ONLY PROTECTED ROUTE ---
@@ -153,11 +157,12 @@ app.get("/faculty", auth, authorizeRoles("faculty"), (req, res) => {
         message: "Welcome Faculty! You have access to this protected route.",
         user: req.user
     });
+    // res.redirect("dashboard");
 });
 
 // ==========================================
 // 7. START SERVER
 // ==========================================
-app.listen(3000, () => {
+app.listen(process.env.PORT, () => {
     console.log("Server is running on port 3000");
 }); 
